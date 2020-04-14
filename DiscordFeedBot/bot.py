@@ -14,7 +14,7 @@ from DiscordFeedBot.Models.posts import PostModel
 class DiscordBot(Discord):
     def __init__(self):
         super(DiscordBot, self).__init__()
-        self.web.add_model(FeedModel)
+        self.web_models.append(FeedModel)
 
     async def task_entry_manager(self):
         processors = {}

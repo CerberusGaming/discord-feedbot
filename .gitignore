@@ -140,3 +140,4 @@ cython_debug/
 # Project Files
 .idea
 config.ini
+test.db

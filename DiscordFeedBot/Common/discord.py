@@ -17,14 +17,19 @@ class Discord(Client):
         self.prefix = self.config.get('discord', 'prefix', default="!")
 
         self.feeds = FeedManager()
-        self.web = WebPanel()
+        self.web_models = []
 
-    def run_discord(self, **kwargs):
+    def run(self, **kwargs):
+        if self.config.get("web", "enabled", default="false", wrap=bool):
+            def run_webserver():
+                web = WebPanel()
+                web.add_model(self.web_models)
+                web.run(self.config.get('web', 'host', default="0.0.0.0"),
+                        self.config.get('web', 'port', default="7777", wrap=int))
+
+            self.loop.run_in_executor(None, run_webserver)
+
         return super(Discord, self).run(self.config.get('discord', 'token'), **kwargs)
-
-    def run_webserver(self):
-        return self.web.run(self.config.get('web', 'host', default="0.0.0.0"),
-                            self.config.get('web', 'port', default="7777", wrap=int))
 
     def command_parser(self, content: str):
         content = " ".join([x.lstrip().rstrip() for x in content.split(" ") if len(x.replace(" ", "")) > 0])
@@ -81,7 +86,7 @@ class Discord(Client):
         return command.lstrip(self.prefix), args, kwargs
 
     async def on_message(self, message: Message):
-        if message.content.lower().startswith(self.prefix):
+        if message.content.lower().startswith(self.prefix) and message.author.id != self.user.id:
             command, args, kwargs = self.command_parser(message.content)
             command = "command_" + command.lstrip(self.prefix).lower()
             if hasattr(self, command):

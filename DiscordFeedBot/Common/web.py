@@ -17,5 +17,6 @@ class WebPanel(Flask):
         def index():
             return redirect("/admin")
 
-    def add_model(self, model):
-        self.admin.add_views(ModelView(model, Session()))
+    def add_model(self, models: list):
+        for model in models:
+            self.admin.add_views(ModelView(model, Session()))
