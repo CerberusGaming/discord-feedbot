@@ -37,7 +37,7 @@ class BaseFeed:
     def get_entries(self):
         return []
 
-    def create_embed(self, post: dict):
+    def create_embed(self, post: dict, nsfw: bool):
         return FeedEmbed()
 
 

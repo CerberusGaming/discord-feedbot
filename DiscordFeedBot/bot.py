@@ -251,11 +251,13 @@ class DiscordBot(Discord):
 
             for entry in entries.all():
                 entry: EntryModel
-                embed = handler.create_embed(json.loads(entry.entry_data))
+                guild: Guild = self.get_guild(feed.guild)
+                channel: TextChannel = guild.get_channel(feed.channel)
+
+                embed = handler.create_embed(post=json.loads(entry.entry_data), nsfw=channel.nsfw)
                 if embed is not None:
                     embed.set_footer(text="Discord Feedbot: {} - {}".format(feed.feed_type, feed.feed_param))
-                    guild: Guild = self.get_guild(feed.guild)
-                    channel: TextChannel = guild.get_channel(feed.channel)
+
                     try:
                         if await channel.send(embed=embed) is not None:
                             ses.add(PostModel(feed_id=feed.feed_id, entry_id=entry.entry_id))

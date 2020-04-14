@@ -58,17 +58,17 @@ class RedditFeed(BaseFeed):
             posts = []
         return posts
 
-    def create_embed(self, post: dict):
+    def create_embed(self, post: dict, nsfw: bool):
         embed = RedditFeedEmbed(post)
         if self.ignore_nsfw:
-            nsfw = False
+            nsfw = True
         else:
-            nsfw = embed.nsfw
+            nsfw = all([nsfw, embed.nsfw])
 
         if self.ignore_hidden:
-            hidden = False
+            hidden = True
         else:
-            hidden = embed.hidden
-        if not hidden and not nsfw:
+            hidden = not embed.hidden
+        if hidden and nsfw:
             return embed
         return None
