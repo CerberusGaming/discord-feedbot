@@ -12,4 +12,4 @@ class PostModel(Base):
     feed_id = Column(Integer, nullable=False)
     entry_id = Column(Integer, nullable=False)
 
-    post_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow())
+    post_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow().replace(microsecond=0))

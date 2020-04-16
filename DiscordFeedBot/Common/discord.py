@@ -1,6 +1,7 @@
 import inspect
 
 from discord import Client, Message
+from discord.ext import commands
 
 from .config import Config
 from .feeds import FeedManager
@@ -12,10 +13,10 @@ class Discord(Client):
     def __init__(self, *, loop=None, **options):
         super(Discord, self).__init__(loop=loop, **options)
         Base.metadata.create_all()
-
         self.config = Config()
         self.prefix = self.config.get('discord', 'prefix', default="!")
-
+        self.debug = self.config.get('app', 'debug', default=False, wrap=bool)
+        self.loop.set_debug(enabled=self.debug)
         self.feeds = FeedManager()
         self.web_models = []
 
@@ -112,3 +113,12 @@ class Discord(Client):
         print("Bot Online")
         self._task_loader()
         pass
+
+
+class DiscordBot(commands.Bot):
+    def __init__(self):
+        self.config = Config()
+        super(DiscordBot, self).__init__(command_prefix=self.config.get('discord', 'prefix', default="!"))
+
+    def run(self, **kwargs):
+        return super(DiscordBot, self).run(self.config.get('discord', 'token'), **kwargs)

@@ -15,6 +15,8 @@ class DiscordBot(Discord):
     def __init__(self):
         super(DiscordBot, self).__init__()
         self.web_models.append(FeedModel)
+        self.web_models.append(EntryModel)
+        self.web_models.append(PostModel)
 
     async def task_entry_manager(self):
         processors = {}
@@ -32,12 +34,12 @@ class DiscordBot(Discord):
                     processors[proc_name] = self.loop.create_task(self.entry_processor(feed_type, feed_param))
             ses.close()
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(3)
 
     async def task_post_manager(self):
         processors = {}
         while self.loop.is_running():
-            for feed_id, future in processors.copy().items():
+            for feed_id, future in processors.items():
                 if future.done():
                     del processors[feed_id]
 
@@ -45,10 +47,11 @@ class DiscordBot(Discord):
             for feed in ses.query(FeedModel.feed_id).filter(FeedModel.feed_enabled).all():
                 feed_id = feed[0]
                 if feed_id not in processors.keys():
+                    pass
                     processors[feed_id] = self.loop.create_task(self.post_processor(feed_id))
             ses.close()
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(3)
 
     async def command_feed(self, message: Message, args: list = None, kwargs: dict = None):
         # Channel Managers Only
@@ -246,10 +249,11 @@ class DiscordBot(Discord):
                 .filter(EntryModel.feed_type == feed.feed_type, EntryModel.feed_param == feed.feed_param) \
                 .filter(EntryModel.entry_created >= feed.feed_created) \
                 .outerjoin(PostModel, PostModel.entry_id == EntryModel.entry_id) \
-                .filter(PostModel.feed_id == None) \
+                .filter(PostModel.entry_id == None) \
                 .order_by(EntryModel.entry_created.asc())
 
             for entry in entries.all():
+                print(entry.entry_id)
                 entry: EntryModel
                 guild: Guild = self.get_guild(feed.guild)
                 channel: TextChannel = guild.get_channel(feed.channel)
@@ -259,9 +263,13 @@ class DiscordBot(Discord):
                     embed.set_footer(text="Discord Feedbot: {} - {}".format(feed.feed_type, feed.feed_param))
 
                     try:
-                        if await channel.send(embed=embed) is not None:
+                        resp = await channel.send(embed=embed)
+                        if resp is not None:
+                            print("Posted: ", embed.to_dict())
                             ses.add(PostModel(feed_id=feed.feed_id, entry_id=entry.entry_id))
                             ses.commit()
                     except:
-                        print(embed.to_dict())
+                        print("Failed to post: ", embed.to_dict())
+
+            ses.close()
             await asyncio.sleep(10)

@@ -9,11 +9,18 @@ from DiscordFeedBot.Common.feeds import BaseFeed, FeedEntry, FeedEmbed
 class RedditFeedEmbed(FeedEmbed):
     def __init__(self, post: dict):
         super(FeedEmbed, self).__init__()
+        self.description = ""
 
         self.title = html.unescape(post['title'])
         if len(self.title) > 100:
             self.description = self.title
             self.title = self.title[0:100] + "..."
+
+        if len(self.description) > 0:
+            self.description = self.description + "\n"
+
+        if len(post.get('url', "")) > 0:
+            self.description = self.description + "Link: " + post['url']
 
         self.set_author(name=post['author'])
         self.timestamp = datetime.datetime.fromtimestamp(int(post['created_utc']))
@@ -59,6 +66,7 @@ class RedditFeed(BaseFeed):
         return posts
 
     def create_embed(self, post: dict, nsfw: bool):
+        print(post)
         embed = RedditFeedEmbed(post)
         if self.ignore_nsfw:
             nsfw = True
