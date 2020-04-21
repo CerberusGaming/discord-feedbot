@@ -1,7 +1,7 @@
 import os
 from uuid import uuid4
 
-from flask import Flask, redirect, render_template
+from flask import Flask
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 
@@ -9,9 +9,9 @@ from DiscordFeedBot.Common.storage import Session
 
 
 class IndexView(AdminIndexView):
-    @expose()
+    @expose("/")
     def index(self):
-        return render_template("index.html")
+        return self.render("index.html")
 
 
 class WebPanel(Flask):
@@ -21,11 +21,8 @@ class WebPanel(Flask):
 
         self.template_folder = os.path.normpath(os.getcwd() + "/templates")
         self.secret_key = str(uuid4())
-        self.admin = Admin(self, name="FeedBot Admin", index_view=IndexView())
-
-        @self.route("/")
-        def index():
-            return redirect("/admin")
+        self.admin = Admin(self, name="FeedBot Admin", index_view=IndexView(url="/"))
+        self.admin.template_mode = 'bootstrap3'
 
     def add_model(self, models: list):
         for model in models:
