@@ -17,7 +17,7 @@ class RedditFeedEmbed(FeedEmbed):
         super(RedditFeedEmbed, self).__init__(**data)
         self.set_author(name=post.get('author'))
 
-        title = post.get('title')
+        title = post.get('title', "")
         description = "Link: " + post.get('url', "")
         if len(title) > 99:
             description = title + "\n" + description
