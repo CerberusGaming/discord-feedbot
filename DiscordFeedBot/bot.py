@@ -295,6 +295,7 @@ class DiscordBot(Discord):
 
                     try:
                         resp = await channel.send(embed=embed)
+                        print(resp)
                         if resp is not None:
                             print("Posted: ", embed.to_dict())
                             ses.add(PostModel(feed_id=feed.feed_id, entry_id=entry.entry_id))

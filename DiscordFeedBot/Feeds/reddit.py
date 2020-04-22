@@ -66,7 +66,6 @@ class RedditFeed(BaseFeed):
         return posts
 
     def create_embed(self, post: dict, nsfw: bool):
-        print(post)
         embed = RedditFeedEmbed(post)
         if self.ignore_nsfw:
             nsfw = True
