@@ -11,5 +11,6 @@ RUN apk --no-cache add --virtual build postgresql-dev gcc python3-dev musl-dev \
 
 COPY run.py .
 COPY DiscordFeedBot/ ./DiscordFeedBot
+COPY templates/ ./templates
 
 CMD python3 ./run.py
