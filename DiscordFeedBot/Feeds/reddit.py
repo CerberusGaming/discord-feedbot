@@ -18,12 +18,17 @@ class RedditFeedEmbed(FeedEmbed):
             data.update({"hidden": True})
         super(RedditFeedEmbed, self).__init__(**data)
         self.set_author(name=post.get('author'))
-        # Images and Video
         if post.get("thumbnail", None) is not None:
             try:
-                self.set_image(url=post.get("media").get("oembed").get("thumbnail_url"))
+                image: str = post.get("media").get("oembed").get("thumbnail_url")
+                assert image.lower().startswith("https")
+                self.set_image(url=image)
             except:
-                self.set_image(url=post.get("thumbnail"))
+                image: str = post.get("thumbnail")
+                if image.startswith("https"):
+                    self.set_image(url=image)
+                else:
+                    self.set_image(url=post.get("url"))
 
 
 class RedditFeed(FeedBase):

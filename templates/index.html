@@ -71,7 +71,8 @@
             xaxis: {
                 type: 'date',
                 range: ['{{ data.get("hist_dates", [])[0] }}', '{{ data.get("hist_dates", [])[-1] }}']
-            }
+            },
+            yaxis: {type:'linear', range:[0, {{ data.get("feeds_hist", [])|max }}]}
         },
         {staticPlot: true});
 
@@ -88,7 +89,8 @@
             xaxis: {
                 type: 'date',
                 range: ['{{ data.get("hist_dates", [])[0] }}', '{{ data.get("hist_dates", [])[-1] }}']
-            }
+            },
+            yaxis: {type:'linear', range:[0, {{ data.get("entries_hist", [])|max }}]}
         },
         {staticPlot: true});
 
@@ -105,7 +107,8 @@
             xaxis: {
                 type: 'date',
                 range: ['{{ data.get("hist_dates", [])[0] }}', '{{ data.get("hist_dates", [])[-1] }}']
-            }
+            },
+            yaxis: {type:'linear', range:[0, {{ data.get("posts_hist", [])|max }}]}
         },
         {staticPlot: true});
     {% endautoescape %}
