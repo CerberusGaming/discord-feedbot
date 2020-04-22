@@ -19,7 +19,6 @@ class DiscordBot(Discord):
         self.web_models.append(FeedModel)
         self.web_models.append(EntryModel)
         self.web_models.append(PostModel)
-        self.web_models.append(StatsModel)
 
     async def task_stats_manager(self):
         while self.loop.is_running():
