@@ -19,6 +19,7 @@ class Config:
         value = os.getenv(self._gen_env(section, option), self._config.get(section, option, fallback=default))
         if callable(wrap):
             if isinstance(wrap(), bool):
+                value = str(value)
                 if value.lower() == 'true' or str(value) == "1" or str(value).lower() == 'y':
                     value = True
                 elif value.lower() == 'false' or str(value) == "0" or str(value).lower() == 'n':
