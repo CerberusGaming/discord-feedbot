@@ -300,7 +300,8 @@ class DiscordBot(Discord):
                         try:
                             resp = await channel.send(embed=embed)
                             if resp is not None:
-                                print("Posted: {} to channel {} via feed {}".format(embed.title, channel.name, feed_id))
+                                print("Posted: '{}' to channel '{}' via feed '{}'".format(embed.title, channel.name,
+                                                                                          feed_id))
                                 ses.add(PostModel(feed_id=feed.feed_id, entry_id=entry.entry_id))
                                 ses.commit()
                         except:
