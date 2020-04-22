@@ -8,8 +8,6 @@ from DiscordFeedBot.Common.feeds import FeedBase, FeedEmbed
 class RedditFeedEmbed(FeedEmbed):
     def __init__(self, post: dict):
         data = {"uuid": post.get('id'),
-                "title": post.get('title'),
-                'description': "Link: " + post.get('url', ""),
                 "url": "https://www.reddit.com" + post.get('permalink', ""),
                 "timestamp": datetime.datetime.fromtimestamp(post.get('created_utc', 0)),
                 "nsfw": post.get('over_18')
@@ -18,6 +16,15 @@ class RedditFeedEmbed(FeedEmbed):
             data.update({"hidden": True})
         super(RedditFeedEmbed, self).__init__(**data)
         self.set_author(name=post.get('author'))
+
+        title = post.get('title')
+        description = "Link: " + post.get('url', "")
+        if len(title) > 99:
+            description = title + "\n" + description
+            title = title[0:97] + "..."
+        self.title = title
+        self.description = description
+
         if post.get("thumbnail", None) is not None:
             try:
                 image: str = post.get("media").get("oembed").get("thumbnail_url")
@@ -27,8 +34,6 @@ class RedditFeedEmbed(FeedEmbed):
                 image: str = post.get("thumbnail")
                 if image.startswith("https"):
                     self.set_image(url=image)
-                else:
-                    self.set_image(url=post.get("url"))
 
 
 class RedditFeed(FeedBase):
