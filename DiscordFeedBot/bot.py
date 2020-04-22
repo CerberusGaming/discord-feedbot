@@ -70,7 +70,7 @@ class DiscordBot(Discord):
     async def task_post_manager(self):
         processors = {}
         while self.loop.is_running():
-            for feed_id, future in processors.items():
+            for feed_id, future in processors.copy().items():
                 if future.done():
                     del processors[feed_id]
 
