@@ -290,6 +290,7 @@ class DiscordBot(Discord):
                 channel: TextChannel = guild.get_channel(feed.channel)
 
                 embed = handler.create_embed(post=json.loads(entry.entry_data), nsfw=channel.nsfw)
+                print(embed)
                 if embed is not None:
                     embed.set_footer(text="Discord Feedbot: {} - {}".format(feed.feed_type, feed.feed_param))
 
