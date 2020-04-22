@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import json
 
 from discord import Message, Guild, TextChannel
@@ -9,6 +10,7 @@ from DiscordFeedBot.Common.storage import Session
 from DiscordFeedBot.Models.entries import EntryModel
 from DiscordFeedBot.Models.feeds import FeedModel
 from DiscordFeedBot.Models.posts import PostModel
+from DiscordFeedBot.Models.stats import StatsModel
 
 
 class DiscordBot(Discord):
@@ -17,6 +19,36 @@ class DiscordBot(Discord):
         self.web_models.append(FeedModel)
         self.web_models.append(EntryModel)
         self.web_models.append(PostModel)
+        self.web_models.append(StatsModel)
+
+    async def task_stats_manager(self):
+        while self.loop.is_running():
+            ses = Session()
+            last: StatsModel = ses.query(StatsModel).order_by(StatsModel.stats_date.desc()).first()
+            new = StatsModel(
+                stats_date=datetime.datetime.utcnow().replace(microsecond=0),
+                feeds=ses.query(FeedModel).count(),
+                entries=ses.query(EntryModel).count(),
+                posts=ses.query(PostModel).count(),
+                guilds=ses.query(FeedModel).distinct(FeedModel.guild).count(),
+                channels=ses.query(FeedModel).distinct(FeedModel.channel).count()
+            )
+            if last is None:
+                ses.add(new)
+                ses.commit()
+            else:
+                check = not all([
+                    last.feeds == new.feeds,
+                    last.entries == new.entries,
+                    last.posts == new.posts,
+                    last.guilds == new.guilds,
+                    last.channels == new.channels
+                ])
+                if check:
+                    ses.add(new)
+                    ses.commit()
+            ses.close()
+            await asyncio.sleep(10)
 
     async def task_entry_manager(self):
         processors = {}

@@ -1,5 +1,111 @@
 {% extends 'admin/master.html' %}
 
+{% block head %}
+    {{ super() }}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+{% endblock %}
+
 {% block body %}
-    <p>Here I'm going to display some data.</p>
+<div class="row">
+    <div class="col-sm-4">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div id="feeds_chart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div id="entries_chart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div id="posts_chart"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-4">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                Current Feeds: {{ data.get("total_feeds", 0) }}
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                Current Channels: {{ data.get("channels", 0) }}
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                Current Guilds: {{ data.get("guilds", 0) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    {% autoescape false %}
+
+    Plotly.newPlot(
+        'feeds_chart',
+        [{
+            x: ['{{ "','".join(data.get("hist_dates", [])) }}'],
+            y: [{{ ",".join(data.get("feeds_hist", [])) }}],
+            mode: 'scatter'
+        }],
+        {
+            title: "Total Daily Feeds / Past 30 days",
+            xaxis: {
+                type: 'date',
+                range: ['{{ data.get("hist_dates", [])[0] }}', '{{ data.get("hist_dates", [])[-1] }}']
+            }
+        },
+        {staticPlot: true});
+
+
+    Plotly.newPlot(
+        'entries_chart',
+        [{
+            x: ['{{ "','".join(data.get("hist_dates", [])) }}'],
+            y: [{{ ",".join(data.get("entries_hist", [])) }}],
+            mode: 'scatter'
+        }],
+        {
+            title: "Total Daily Entries / Past 30 days",
+            xaxis: {
+                type: 'date',
+                range: ['{{ data.get("hist_dates", [])[0] }}', '{{ data.get("hist_dates", [])[-1] }}']
+            }
+        },
+        {staticPlot: true});
+
+
+    Plotly.newPlot(
+        'posts_chart',
+        [{
+            x: ['{{ "','".join(data.get("hist_dates", [])) }}'],
+            y: [{{ ",".join(data.get("posts_hist", [])) }}],
+            mode: 'scatter'
+        }],
+        {
+            title: "Total Daily Posts / Past 30 days",
+            xaxis: {
+                type: 'date',
+                range: ['{{ data.get("hist_dates", [])[0] }}', '{{ data.get("hist_dates", [])[-1] }}']
+            }
+        },
+        {staticPlot: true});
+    {% endautoescape %}
+</script>
 {% endblock %}
