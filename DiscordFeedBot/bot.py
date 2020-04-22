@@ -5,7 +5,7 @@ import json
 from discord import Message, Guild, TextChannel
 
 from DiscordFeedBot.Common.discord import Discord
-from DiscordFeedBot.Common.feeds import BaseFeed, FeedEntry
+from DiscordFeedBot.Common.feeds import FeedBase, FeedEmbed
 from DiscordFeedBot.Common.storage import Session
 from DiscordFeedBot.Models.entries import EntryModel
 from DiscordFeedBot.Models.feeds import FeedModel
@@ -184,7 +184,7 @@ class DiscordBot(Discord):
                     await message.channel.send("Invalid, try `{p}feed help add`".format(p=self.prefix))
                 else:
                     if len(args) > 2:
-                        handler: BaseFeed = getattr(self.feeds, str(args[1]).title(), None)
+                        handler: FeedBase = getattr(self.feeds, str(args[1]).title(), None)
                         if handler is not None:
                             hname = str(handler.feed_type)
                             param = str(" ".join(args[2:]))
@@ -253,16 +253,16 @@ class DiscordBot(Discord):
 
     async def entry_processor(self, feed_type: str, feed_param: str):
         while self.loop.is_running():
-            handler: BaseFeed = getattr(self.feeds, self.feeds.feeds[feed_type.lower()])(param=feed_param)
+            handler: FeedBase = getattr(self.feeds, self.feeds.feeds[feed_type.lower()])(param=feed_param)
             ses = Session()
             for entry in handler.get_entries():
-                entry: FeedEntry
+                entry: FeedEmbed
                 if ses.query(EntryModel).filter(EntryModel.feed_type == feed_type, EntryModel.feed_param == feed_param,
-                                                EntryModel.entry_uid == entry.uid).count() == 0:
+                                                EntryModel.entry_uid == entry.uuid).count() == 0:
                     ses.add(EntryModel(feed_type=feed_type,
                                        feed_param=feed_param,
-                                       entry_uid=entry.uid,
-                                       entry_data=json.dumps(entry.data)))
+                                       entry_uid=entry.uuid,
+                                       entry_data=json.dumps(entry.to_dict())))
                     ses.commit()
             ses.close()
             await asyncio.sleep(handler.refresh)
@@ -273,8 +273,8 @@ class DiscordBot(Discord):
             feed: FeedModel = ses.query(FeedModel).filter(FeedModel.feed_id == feed_id).first()
             if feed is None:
                 break
-            extra = json.loads(feed.feed_extra)
-            handler: BaseFeed = getattr(self.feeds, self.feeds.feeds[feed.feed_type.lower()])(feed.feed_param, **extra)
+            extra: dict = json.loads(feed.feed_extra) if feed.feed_extra is not None else {}
+            handler: FeedBase = getattr(self.feeds, self.feeds.feeds[feed.feed_type.lower()])(feed.feed_param, **extra)
 
             entries = ses.query(EntryModel) \
                 .filter(EntryModel.feed_type == feed.feed_type, EntryModel.feed_param == feed.feed_param) \
@@ -284,25 +284,27 @@ class DiscordBot(Discord):
                 .order_by(EntryModel.entry_created.asc())
 
             for entry in entries.all():
-                print(entry.entry_id)
                 entry: EntryModel
-                guild: Guild = self.get_guild(feed.guild)
-                channel: TextChannel = guild.get_channel(feed.channel)
-
-                embed = handler.create_embed(post=json.loads(entry.entry_data), nsfw=channel.nsfw)
-                print(embed)
+                embed = handler.create_embed(post=json.loads(entry.entry_data))
                 if embed is not None:
-                    embed.set_footer(text="Discord Feedbot: {} - {}".format(feed.feed_type, feed.feed_param))
+                    guild: Guild = self.get_guild(feed.guild)
+                    channel: TextChannel = guild.get_channel(feed.channel)
 
-                    try:
-                        resp = await channel.send(embed=embed)
-                        print(resp)
-                        if resp is not None:
-                            print("Posted: ", embed.to_dict())
-                            ses.add(PostModel(feed_id=feed.feed_id, entry_id=entry.entry_id))
-                            ses.commit()
-                    except:
-                        print("Failed to post: ", embed.to_dict())
+                    nsfw_flag = extra.get("ignore_nsfw", False)
+                    nsfw_flag = nsfw_flag if nsfw_flag else any([all([embed.nsfw, channel.nsfw]), not channel.nsfw])
+
+                    hidden_flag = extra.get("ignore_hidden", False)
+                    hidden_flag = hidden_flag if hidden_flag else not embed.hidden
+
+                    if nsfw_flag and hidden_flag:
+                        try:
+                            resp = await channel.send(embed=embed)
+                            if resp is not None:
+                                print("Posted: ", embed.to_dict())
+                                ses.add(PostModel(feed_id=feed.feed_id, entry_id=entry.entry_id))
+                                ses.commit()
+                        except:
+                            print("Failed to post: ", embed.to_dict())
 
             ses.close()
             await asyncio.sleep(10)
