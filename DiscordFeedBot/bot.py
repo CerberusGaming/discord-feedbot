@@ -54,6 +54,7 @@ class DiscordBot(Discord):
         while self.loop.is_running():
             for feed_id, future in processors.copy().items():
                 if future.done():
+                    print("Shutting Down Entry Manager: {}".format(feed_id))
                     del processors[feed_id]
 
             ses = Session()
@@ -62,6 +63,7 @@ class DiscordBot(Discord):
                 feed_type, feed_param = feed
                 proc_name = "{}_{}".format(feed_type, feed_param)
                 if proc_name not in processors.keys():
+                    print("Starting Entry Manager: {}".format(feed_type))
                     processors[proc_name] = self.loop.create_task(self.entry_processor(feed_type, feed_param))
             ses.close()
 
@@ -72,6 +74,7 @@ class DiscordBot(Discord):
         while self.loop.is_running():
             for feed_id, future in processors.copy().items():
                 if future.done():
+                    print("Shutting Down Post Manager: {}".format(feed_id))
                     del processors[feed_id]
 
             ses = Session()
@@ -79,6 +82,7 @@ class DiscordBot(Discord):
                 feed_id = feed[0]
                 if feed_id not in processors.keys():
                     pass
+                    print("Starting Post Manager: {}".format(feed_id))
                     processors[feed_id] = self.loop.create_task(self.post_processor(feed_id))
             ses.close()
 
